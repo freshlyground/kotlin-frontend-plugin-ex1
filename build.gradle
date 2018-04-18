@@ -1,0 +1,75 @@
+buildscript {
+    ext.kotlin_version = '1.2.31'
+
+    repositories {
+        jcenter()
+        maven {
+            url "https://dl.bintray.com/kotlin/kotlin-eap"
+        }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.30"
+    }
+}
+
+group 'fg.kotlin.example'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'kotlin2js'
+apply plugin: 'org.jetbrains.kotlin.frontend'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
+}
+
+kotlinFrontend {
+    downloadNodeJsVersion = "latest"
+
+    npm {
+        dependency "style-loader" // production dependency
+        devDependency "karma"     // development dependency
+    }
+
+    webpackBundle {
+        bundleName = "main"
+        contentPath = file('src/main/web')
+    }
+
+    karma {
+        port = 9876
+        runnerPort = 9100
+        reporters = ["progress"]
+        frameworks = ["qunit"] // for now only qunit works as intended
+        preprocessors = ["..."]
+    }
+
+    define "PRODUCTION", false
+}
+
+
+compileKotlin2Js {
+    kotlinOptions.metaInfo = true
+    kotlinOptions.outputFile = "$project.buildDir.path/js/${project.name}.js"
+    kotlinOptions.sourceMap = true
+    kotlinOptions.moduleKind = 'commonjs'
+    kotlinOptions.main = "call"
+}
+
+compileTestKotlin2Js {
+    kotlinOptions.metaInfo = true
+    kotlinOptions.outputFile = "$project.buildDir.path/js-tests/${project.name}-tests.js"
+    kotlinOptions.sourceMap = true
+    kotlinOptions.moduleKind = 'commonjs'
+//    kotlinOptions.moduleName = project.name + "-test"
+    kotlinOptions.main = "call"
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.3.1'
+}
